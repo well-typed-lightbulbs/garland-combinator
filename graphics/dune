@@ -1,0 +1,3 @@
+(library
+  (name garland_graphics)
+  (libraries garland graphics unix threads))
