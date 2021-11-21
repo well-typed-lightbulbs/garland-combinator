@@ -60,7 +60,6 @@ module Anim : sig
   val noloop : 'a t -> 'a t
 
   val rotate : float -> 'a t -> 'a t
-  val offset : float -> 'a t -> 'a t
   val speed : float -> 'a t -> 'a t
   val duration : float -> 'a t -> 'a t
   val truncate : float -> 'a t -> 'a t

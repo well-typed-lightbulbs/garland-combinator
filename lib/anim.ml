@@ -23,15 +23,23 @@ let mod_float' x m =
   then x +. m
   else x
 
-let speed factor x =
-  { duration = abs_float (x.duration /. factor)
-  ; f = (fun t -> x.f (if factor < 0.0 then x.duration +. factor *. t else factor *. t))
+let moment t =
+  { duration = 0.0
+  ; f = (fun _ -> t.f 0.0)
   }
 
+let speed factor x =
+  if factor = 0.0
+  then moment x
+  else
+    { duration = abs_float (x.duration /. factor)
+    ; f = (fun t -> x.f (if factor < 0.0 then x.duration +. factor *. t else factor *. t))
+    }
+
 let duration duration x =
-  { duration
-  ; f = (fun t -> x.f (x.duration *. t /. duration))
-  }
+  if x.duration = 0.0
+  then x
+  else speed (duration /. x.duration) x
 
 let map f t =
   { duration = t.duration
@@ -54,11 +62,6 @@ let loop t =
   ; f = (fun x -> t.f (mod_float' x t.duration))
   }
 
-let offset dx t =
-  { duration = t.duration
-  ; f = (fun x -> t.f (mod_float' (x +. dx) t.duration))
-  }
-
 let rotate dx t =
   { duration = t.duration
   ; f = (fun x -> t.f (mod_float' (x +. dx) t.duration))
@@ -67,11 +70,6 @@ let rotate dx t =
 let truncate duration t =
   { duration
   ; f = t.f
-  }
-
-let morph f a b =
-  { duration = 1.0
-  ; f = (fun x -> map2 (f x) a b)
   }
 
 let ( <*> ) f x = map2 (fun f x -> f x) f x

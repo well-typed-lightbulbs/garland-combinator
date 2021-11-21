@@ -61,7 +61,7 @@ let ( <*> ) f x = Anim.map2 (fun f x -> Anim.( <*> ) f x) f x
 let rev t = Anim.speed (-1.0) t
 let flip t = Anim.map (Anim.speed (-1.0)) t
 
-let offset f t = Anim.offset f t
+let offset dx t = Anim.rotate dx t
 
 let truncate d t = Anim.truncate d t
 
@@ -71,8 +71,8 @@ let delay dt t = duration dt (first t) === t
 
 let noloop t = Anim.noloop t
 
-let instant t = Anim.duration 0.0 t
-let point t = Anim.map (Anim.duration 0.0) t
+let instant t = Anim.moment t
+let point t = Anim.map Anim.moment t
 
 let transparent = const Color.transparent
 let red = const Color.red
