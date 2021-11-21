@@ -12,3 +12,13 @@
   (name garland)
   (synopsis "Garland")
   (depends (ocaml (>= "4.08"))))
+
+(package
+  (name garland_jsoo)
+  (synopsis "Garland, js_of_ocaml playground library")
+  (depends
+    (ocaml (>= "4.08"))
+    js_of_ocaml
+    js_of_ocaml-ppx
+    js_of_ocaml-toplevel
+    js_of_ocaml-compiler))

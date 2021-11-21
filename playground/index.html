@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Garland playground</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="codemirror/codemirror-5.58.2/lib/codemirror.css">
+
+<style>
+@import url(https://cdn.jsdelivr.net/gh/tonsky/FiraCode@4/distr/fira_code.css);
+
+.garland {
+  display: flex;
+  flex-flow: row;
+  background: #222;
+  padding: 10px;
+  justify-content: space-around;
+  margin: 1em 0;
+}
+
+.led {
+  flex: 1 0 auto;
+  min-width: 10px;
+  height: auto;
+  border-radius: 100%;
+  border: 1px solid black;
+}
+
+.led:before {
+  content:'';
+  float:left;
+  padding-top:100%;
+}
+
+#errors {
+  font-weight: bold;
+  color: #BF3838;
+  background: #FFB2B2;
+  font-size: 1.1em;
+}
+
+#output {
+  font-family: monospace, monospace;
+  margin: 1em 0;
+}
+
+
+body {
+  font-family: 'Fira Sans', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.CodeMirror * {
+  font-family: 'Fira Code', monospace;
+}
+
+.CodeMirror {
+  height: auto;
+  line-height: 1.3rem;
+}
+
+.ide {
+  display: flex;
+  height: 100vh;
+}
+
+#toplevel-container {
+  overflow: scroll;
+  width: 100%;
+  height: 100vh;
+}
+
+.result {
+  background: #eee;
+  width: 100%;
+  padding: 1%;
+  overflow: scroll;
+}
+
+.run {
+  display: block;
+  position: -webkit-sticky;
+  position: sticky;
+}
+</style>
+
+  </head>
+  <body>
+
+    <div class="ide">
+      <div id="toplevel-container">
+        <div>
+          <div id="sharp" class="sharp"></div>
+<textarea id="userinput" rows="5">
+open Garland_jsoo
+
+(* Hello! You can click the RUN button on the top middle
+   to see the results.
+
+   The simplest garland is a single static color: *)
+
+let my_red_garland = red
+
+let () = print_endline "My red garland:"
+let () = run ~nb_leds:60 my_red_garland ;;
+
+
+(* There are more colors available!
+   You can chain garlands together with the ( --- ) operator.
+   They will render side by side. *)
+
+let my_rainbow_garland =
+  red --- yellow --- green --- cyan --- blue --- pink
+
+let () = print_endline "My rainbow garland:"
+let () = run ~nb_leds:60 my_rainbow_garland ;;
+
+
+(* You can also create gradients with the ( --> ) operator. *)
+
+let my_gradient =
+  white --> yellow --> red --> black
+
+let () = print_endline "My gradient from white to yellow to red to black:"
+let () = run ~nb_leds:60 my_gradient ;;
+
+
+(* But a static garland is fairly boring! Let's add a rotation: *)
+
+let my_rotating_rainbow =
+  rotate my_gradient
+
+(* The default rotation performs a full cycle in 1s.
+   It's a bit fast, let's slow it down: *)
+
+let my_rotating_rainbow =
+  speed 0.25 my_rotating_rainbow
+
+let () = print_endline "My rotating rainbow garland:"
+let () = run ~nb_leds:60 my_rotating_rainbow ;;
+
+
+(* The (---) operator can display two animated garlands side by side: *)
+
+let my_mirrored_rainbow =
+  my_rotating_rainbow --- flip my_rotating_rainbow
+
+(* [flip] is doing a horizontal mirror.
+   Try using [rev] to reverse the flow of time!
+*)
+
+let () = print_endline "My mirrored rainbow"
+let () = run ~nb_leds:60 my_mirrored_rainbow ;;
+let () = run ~nb_leds:60 (my_mirrored_rainbow --- my_mirrored_rainbow) ;;
+
+
+(* We can schedule animations in a sequence with the ( === ) operator *)
+
+let my_sequence_rainbow =
+  red === yellow === green === cyan === blue === pink
+
+let () = print_endline "My sequence rainbow:"
+let () = run ~nb_leds:60 (speed 3.0 my_sequence_rainbow) ;;
+
+
+(* You can also create gradient in time with ( ==> ) *)
+
+let my_time_gradient =
+  white ==> yellow ==> red ==> black ==> duration 0.0 white
+
+let my_time_gradient =
+  speed 2.0 my_time_gradient
+
+let () = print_endline "My gradient in time:"
+let () = run ~nb_leds:60 my_time_gradient ;;
+
+(* And we can [offset] a garland to delay its animation: *)
+
+let my_offset =
+  my_time_gradient
+  --- offset 1.5 my_time_gradient
+  --- offset 3.0 my_time_gradient
+  --- offset 4.5 my_time_gradient
+  --- offset 6.0 my_time_gradient
+
+let () = print_endline "My gradient offseted:"
+let () = run ~nb_leds:60 my_offset ;;
+
+
+(* You can vary the horizontal "weight" of an item *)
+
+let my_weight =
+  (weight 0.0 red ==> weight 10.0 red ==> instant (weight 0.0 red))
+  --- green
+  --- (weight 10.0 blue ==> weight 0.0 blue ==> instant (weight 10.0 blue))
+
+let () = print_endline "Varying RGB weight:"
+let () = run ~nb_leds:60 my_weight ;;
+
+
+(* Let's use Random for a typical Christmas effect: *)
+
+let random_yellow _  =
+  map_luminosity
+    (fun _ -> Tween.square (Random.float 1.0))
+    yellow
+
+let random_garland _ =
+  let t = Array.init 60 random_yellow in
+  Array.fold_left ( --- ) (point t.(0)) t
+
+let blink =
+  Array.fold_left ( === ) (random_garland 0)
+  @@ Array.init 10 random_garland
+
+let blink =
+  speed 8.0 (loop blink) ==> black
+
+let () = print_endline "Blink blink:"
+let () = run ~nb_leds:60 blink
+
+
+(* A last example because I'm running out of ideas: *)
+
+let disapear t =
+  weight 1.0 t ==> instant (weight 0.0 t)
+
+let test blue =
+  disapear transparent --- rev (disapear (blue --> white))
+  ===
+  disapear (blue --> yellow) --- rev (disapear transparent)
+
+let test' c = tween Tween.out_bounce (test c)
+
+let test c = flip (test' c) --- (test' c)
+
+let test = speed 1. (test red) +++ offset 2.25 (test pink)
+
+let () = print_endline "A last example:"
+let () = run ~nb_leds:60 test
+</textarea>
+        </div>
+      </div>
+
+      <div class="result">
+        <button id="run">Run</button>
+        <button id="stop">Stop</button>
+        <div id="output"></div>
+        <pre id="errors"></pre>
+        <pre id="camlsig"></pre>
+      </div>
+    </div>
+
+<script src="codemirror/codemirror-5.58.2/lib/codemirror.js"></script>
+<script src="codemirror/codemirror-5.58.2/mode/mllike/mllike.js"></script>
+
+<script>
+
+
+var editor = CodeMirror.fromTextArea(document.getElementById('userinput'), {
+  mode: 'text/x-ocaml',
+  lineNumbers: true,
+  matchBrackets: true,
+});
+editor.on('change', function() {
+  document.getElementById('userinput').value = editor.getValue();
+});
+
+const markers = [];
+
+function clearHl() {
+  markers.forEach(function (marker) { marker.clear() });
+}
+
+function highlight(line0, col0, line1, col1) {
+  const options = {
+    css: 'background: rgba(255,0,0,0.3); font-weight: bold',
+    attributes: {title:'Hey'},
+  };
+  const from = { line: line0, ch: col0 };
+  const to = { line: line1, ch: col1 };
+  const mark = editor.markText(from, to, options);
+  markers.push(mark);
+}
+
+var camlsig = document.getElementById('camlsig');
+var camlsig_view = CodeMirror(camlsig, {
+  mode: 'text/x-ocaml',
+  readOnly: 'nocursor',
+});
+function logCaml(str) {
+  str = str.trim();
+  const current = camlsig_view.getValue();
+  str = current == '' ? str : '\n' + str ;
+  camlsig_view.setValue(current + str);
+}
+function resetCaml() {
+  clearHl();
+  camlsig_view.setValue('');
+}
+</script>
+
+<script src="../_build/default/playground/toplevel.js"></script>
+
+  </body>
+</html>
