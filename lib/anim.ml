@@ -39,7 +39,7 @@ let speed factor x =
 let duration duration x =
   if x.duration = 0.0
   then x
-  else speed (duration /. x.duration) x
+  else speed (x.duration /. duration) x
 
 let map f t =
   { duration = t.duration
